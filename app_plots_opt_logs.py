@@ -1,18 +1,28 @@
-import os
-from flask import Flask, render_template, request, redirect, url_for
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objs as go
+import numpy as np
+import os
 from plotly.subplots import make_subplots
 import re
 
-app = Flask(__name__)
+folder_path = 'data_plots_opt_logs'  # Replace with the path to your folder
 
-# Custom function to parse the log file and extract data for plotting
-# Replace this with your actual custom function to process the log file data
-def parse_log_file(file_path, filename):
+files_list = []  # List variable to store the filenames
+
+# Iterate over the files in the folder
+for filename in os.listdir(folder_path):
+    files_list.append(filename)
+
+#files_list = ['AAC_PPT V1.3.9_CTM_Limits_Test_Zala.xlsx', 'AAC_PPT V1.3.9.xlsx', 'Manual_Optimizer2_G4_CTPM_ver2.xlsx']
+
+
+
+
+
+for index, filename in enumerate(files_list):
     # Read the text file line by line and extract the values using regex
     data = []
-    with open(os.path.join(file_path), 'r') as file:
+    with open(os.path.join(folder_path, filename), 'r') as file:
         for line in file:
             # Extract the date and time, if present
             datetime_match = re.match(r"\d{2}/\d{2}/\d{4},\d{1,2}:\d{2}:\d{2} (AM|PM)", line)
@@ -80,48 +90,6 @@ def parse_log_file(file_path, filename):
     yaxis2=dict(title='Current (A)'),
     yaxis3=dict(title='Temperature (C)'),
     yaxis4=dict(title='Mode (Buck/Boost/BB/Safety)'),
-    autosize=True,
     )
-    #globals()[variable_name].show()
-    
-    return globals()[variable_name]
+    globals()[variable_name].show()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        # Check if the POST request has a file part
-        if 'file' not in request.files:
-            return redirect(request.url)
-
-        file = request.files['file']
-
-        # Check if the file has a filename and it has the .log extension
-        if file.filename == '' or not file.filename.lower().endswith('.log'):
-            return redirect(request.url)
-
-        # Save the uploaded file to a temporary location
-        file_path = os.path.join('uploads', file.filename)
-        file.save(file_path)
-
-        # Call the custom function to parse the log file and extract data
-        fig = parse_log_file(file_path, file.filename)
-        fig.update_layout(
-        width=1920,    # Set the width of the chart (in pixels)
-        height=800,   # Set the height of the chart (in pixels)
-        autosize=True,
-        )
-        # Generate the plot using Plotly
-        # Replace the code below with your actual plot creation code
-        #fig = go.Figure()
-        # Add your plot traces and layout here based on the 'data'
-
-        # Remove the temporary file after processing
-        os.remove(file_path)
-
-        return render_template('plot.html', plot=fig.to_html())
-
-    return render_template('index.html')
-
-if __name__ == '__main__':
-    #app.run(port=5001,debug=True)
-    app.run(host="0.0.0.0", port=5001)
